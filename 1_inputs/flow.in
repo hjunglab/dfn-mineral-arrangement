@@ -1,0 +1,177 @@
+# PFLOTRAN steady flow deck: rate-controlled injection (west) / extraction (east), no-flow sides,
+# one pinned-pressure cell as datum. Permeability per cell from dfn_properties.h5 (cubic law, dfnWorks).
+# The steady state is written to a checkpoint that the reactive transport decks restart from.
+#================================================================================
+SIMULATION
+  SIMULATION_TYPE SUBSURFACE
+  PROCESS_MODELS
+    SUBSURFACE_FLOW flow
+      MODE RICHARDS
+    /
+  /
+  CHECKPOINT
+    FORMAT HDF5
+  /
+END
+SUBSURFACE
+
+DFN
+
+NUMERICAL_METHODS FLOW
+  LINEAR_SOLVER
+    SOLVER ITERATIVE
+    RTOL 1.d-8
+    MAXIMUM_NUMBER_OF_ITERATIONS 10000
+  /
+  NEWTON_SOLVER
+    NO_PRINT_CONVERGENCE
+  /
+END
+
+GRID
+  TYPE unstructured_explicit full_mesh_vol_area.uge
+  GRAVITY 0.d0 0.d0 0.d0
+END
+
+FLUID_PROPERTY
+  DIFFUSION_COEFFICIENT 1.d-9
+END
+
+DATASET Permeability
+  FILENAME dfn_properties.h5
+END
+
+MATERIAL_PROPERTY soil1
+  ID 1
+  POROSITY 0.25d0
+  TORTUOSITY 0.5d0
+  CHARACTERISTIC_CURVES default
+  PERMEABILITY
+    DATASET Permeability
+  /
+END
+
+CHARACTERISTIC_CURVES default
+  SATURATION_FUNCTION VAN_GENUCHTEN
+    M 0.5d0
+    ALPHA 1.d-4
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+    MAX_CAPILLARY_PRESSURE 1.d8
+  /
+  PERMEABILITY_FUNCTION MUALEM_VG_LIQ
+    M 0.5d0
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+  /
+END
+
+OUTPUT
+  FORMAT VTK
+  ACKNOWLEDGE_VTK_FLAW
+  VELOCITY_AT_CENTER
+  MASS_BALANCE_FILE
+    PERIODIC TIMESTEP 1
+  /
+  VARIABLES
+    LIQUID_PRESSURE
+    LIQUID_SATURATION
+    PERMEABILITY
+  /
+END
+
+TIME
+  FINAL_TIME 1.d2 y
+  MAXIMUM_TIMESTEP_SIZE 1.d1 y
+END
+
+REGION All
+  COORDINATES
+    -1.d20 -1.d20 -1.d20
+    1.d20 1.d20 1.d20
+  /
+END
+REGION inflow
+  FILE boundary_left_w.ex
+END
+REGION outflow
+  FILE boundary_right_e.ex
+END
+REGION pinned
+  FILE pinned.ex
+END
+REGION side_top
+  FILE boundary_top.ex
+END
+REGION side_bottom
+  FILE boundary_bottom.ex
+END
+REGION side_front
+  FILE boundary_front_n.ex
+END
+REGION side_back
+  FILE boundary_back_s.ex
+END
+
+FLOW_CONDITION pinned_p
+  TYPE
+    LIQUID_PRESSURE dirichlet
+  /
+  LIQUID_PRESSURE 2.0d5
+END
+FLOW_CONDITION injection
+  TYPE
+    RATE SCALED_VOLUMETRIC_RATE VOLUME
+  /
+  RATE 5.d-7 m^3/d
+END
+FLOW_CONDITION extraction
+  TYPE
+    RATE SCALED_VOLUMETRIC_RATE VOLUME
+  /
+  RATE -5.d-7 m^3/d
+END
+FLOW_CONDITION noflow
+  TYPE
+    LIQUID_FLUX neumann
+  /
+  LIQUID_FLUX 0.d0 m/yr
+END
+
+SOURCE_SINK inflow
+  FLOW_CONDITION injection
+  REGION inflow
+END
+SOURCE_SINK outflow
+  FLOW_CONDITION extraction
+  REGION outflow
+END
+BOUNDARY_CONDITION PINNED
+  FLOW_CONDITION pinned_p
+  REGION pinned
+END
+BOUNDARY_CONDITION SEAL_TOP
+  FLOW_CONDITION noflow
+  REGION side_top
+END
+BOUNDARY_CONDITION SEAL_BOTTOM
+  FLOW_CONDITION noflow
+  REGION side_bottom
+END
+BOUNDARY_CONDITION SEAL_FRONT
+  FLOW_CONDITION noflow
+  REGION side_front
+END
+BOUNDARY_CONDITION SEAL_BACK
+  FLOW_CONDITION noflow
+  REGION side_back
+END
+
+INITIAL_CONDITION
+  FLOW_CONDITION pinned_p
+  REGION All
+END
+STRATA
+  REGION All
+  MATERIAL soil1
+END
+
+END_SUBSURFACE

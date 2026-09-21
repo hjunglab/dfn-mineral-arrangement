@@ -1,0 +1,595 @@
+# PFLOTRAN reactive transport template (GIRT, decoupled from the steady flow restart).
+# make_decks.py inserts, at the two #@...@ markers, one REGION / TRANSPORT_CONDITION / CONSTRAINT /
+# INITIAL_CONDITION per fracture with its pyrite and calcite volume fraction and surface area.
+# Waters: gw_initial = reducing groundwater DB1-7; gw_inlet = oxidizing groundwater DB1-3-2 (Kwon et al., 2026).
+# Mineral kinetics: Marty et al. (2015); microbial U(VI) reduction: dual Monod with O2 inhibition.
+#==============================================================================
+#==============================================================================
+SIMULATION
+  SIMULATION_TYPE SUBSURFACE
+  PROCESS_MODELS
+    SUBSURFACE_FLOW flow
+      MODE RICHARDS
+    /
+    SUBSURFACE_TRANSPORT transport
+      MODE GIRT
+      OPTIONS
+        SKIP_RESTART
+      /
+    /
+  /
+  RESTART
+    FILENAME flow_v05c-restart.h5
+    RESET_TO_TIME_ZERO
+  /
+  CHECKPOINT
+    FORMAT HDF5
+  /
+END
+SUBSURFACE
+
+DFN
+
+NUMERICAL_METHODS FLOW
+  LINEAR_SOLVER
+    SOLVER ITERATIVE
+    RTOL 1.d-10
+    ATOL 1.d-12
+    MAXIMUM_NUMBER_OF_ITERATIONS 20000
+  /
+  NEWTON_SOLVER
+    NO_PRINT_CONVERGENCE
+  /
+END
+NUMERICAL_METHODS TRANSPORT
+  LINEAR_SOLVER
+    SOLVER ITERATIVE
+  /
+  TIMESTEPPER
+    TS_ACCELERATION 25
+  /
+  NEWTON_SOLVER
+    RTOL 1.d-6
+    STOL 1.d-6
+    NO_PRINT_CONVERGENCE
+  /
+END
+
+GRID
+  TYPE unstructured_explicit full_mesh_vol_area.uge
+  GRAVITY 0.d0 0.d0 0.d0
+END
+
+FLUID_PROPERTY
+  DIFFUSION_COEFFICIENT 1.d-9
+END
+
+DATASET Permeability
+  FILENAME dfn_properties.h5
+END
+
+CHEMISTRY
+  PRIMARY_SPECIES
+    H+
+    Na+
+    K+
+    Ca++
+    Mg++
+    Cl-
+    HCO3-
+    SO4--
+    F-
+    Al+++
+    Fe++
+    UO2++
+    U++++
+    Acetate-
+    O2(aq)
+    SiO2(aq)
+  /
+  SECONDARY_SPECIES
+    OH-
+    CO2(aq)
+    CO3--
+    CaCO3(aq)
+    CaHCO3+
+    NaHCO3(aq)
+    NaCO3-
+    MgHCO3+
+    MgCO3(aq)
+    MgOH+
+    CaSO4(aq)
+    MgSO4(aq)
+    NaSO4-
+    KSO4-
+    HSO4-
+    HS-
+    H2S(aq)
+    S--
+    HF(aq)
+    MgF+
+    CaF+
+    NaF(aq)
+    HSiO3-
+    AlOH++
+    Al(OH)2+
+    Al(OH)3(aq)
+    Al(OH)4-
+    AlF++
+    AlF2+
+    AlF3(aq)
+    AlF4-
+    AlSO4+
+    Al(SO4)2-
+    UO2OH+
+    UO2(OH)2(aq)
+    UO2(OH)3-
+    UO2CO3(aq)
+    UO2(CO3)2--
+    UO2(CO3)3----
+    Ca2UO2(CO3)3(aq)
+    CaUO2(CO3)3--
+    UOH+++
+    U(OH)4(aq)
+    U(CO3)4----
+    Fe+++
+    FeOH++
+    Fe(OH)2+
+    Fe(OH)3(aq)
+    FeOH+
+    FeCO3(aq)
+    FeHCO3+
+    FeSO4(aq)
+    FeCl+
+  /
+  PASSIVE_GAS_SPECIES
+    O2(g)
+  /
+  MINERALS
+    Quartz
+    K-Feldspar
+    Albite
+    Annite
+    Ripidolite-14A
+    Pyrite                  # Eh buffer + Stage B O2 sink
+    Calcite
+    Uraninite
+    Ferrihydrite
+  /
+  MINERAL_KINETICS
+    Quartz   # Marty15 Quartz (Marty15Crh, BRGM)
+      PREFACTOR                                   # neutral
+        RATE_CONSTANT   6.457e-14 mol/m^2-sec   # log25=-13.19
+        ACTIVATION_ENERGY 76985.6 J/mol
+      /
+      PREFACTOR                                   # base
+        RATE_CONSTANT   1.905e-10 mol/m^2-sec   # log25=-9.72
+        ACTIVATION_ENERGY 79914.4 J/mol
+        PREFACTOR_SPECIES OH-
+          ALPHA 0.34d0
+        /
+      /
+      AFFINITY_THRESHOLD 1.d10
+    /
+    K-Feldspar   # Marty15 Microcline (Marty15Crh, BRGM)
+      PREFACTOR                                   # neutral
+        RATE_CONSTANT   1.000e-14 mol/m^2-sec   # log25=-14.00
+        ACTIVATION_ENERGY 30961.6 J/mol
+      /
+      PREFACTOR                                   # acid
+        RATE_CONSTANT   1.698e-11 mol/m^2-sec   # log25=-10.77
+        ACTIVATION_ENERGY 30961.6 J/mol
+        PREFACTOR_SPECIES H+
+          ALPHA 0.27d0
+        /
+      /
+      PREFACTOR                                   # base
+        RATE_CONSTANT   1.413e-10 mol/m^2-sec   # log25=-9.85
+        ACTIVATION_ENERGY 30961.6 J/mol
+        PREFACTOR_SPECIES OH-
+          ALPHA 0.35d0
+        /
+      /
+      AFFINITY_THRESHOLD 1.d10
+    /
+    Albite   # Marty15 Albite (Marty15Crh, BRGM)
+      PREFACTOR                                   # neutral
+        RATE_CONSTANT   5.129e-20 mol/m^2-sec   # log25=-19.29
+        ACTIVATION_ENERGY 56902.4 J/mol
+      /
+      PREFACTOR                                   # acid
+        RATE_CONSTANT   8.511e-11 mol/m^2-sec   # log25=-10.07
+        ACTIVATION_ENERGY 58157.6 J/mol
+        PREFACTOR_SPECIES H+
+          ALPHA 0.34d0
+        /
+      /
+      PREFACTOR                                   # base
+        RATE_CONSTANT   1.413e-10 mol/m^2-sec   # log25=-9.85
+        ACTIVATION_ENERGY 56065.6 J/mol
+        PREFACTOR_SPECIES OH-
+          ALPHA 0.32d0
+        /
+      /
+      AFFINITY_THRESHOLD 1.d10
+    /
+    Annite   # Marty15 Biotite (Marty15Crh, BRGM)
+      PREFACTOR                                   # neutral
+        RATE_CONSTANT   2.291e-12 mol/m^2-sec   # log25=-11.64
+        ACTIVATION_ENERGY 48952.8 J/mol
+      /
+      PREFACTOR                                   # acid
+        RATE_CONSTANT   1.096e-09 mol/m^2-sec   # log25=-8.96
+        ACTIVATION_ENERGY 48952.8 J/mol
+        PREFACTOR_SPECIES H+
+          ALPHA 0.67d0
+        /
+      /
+      PREFACTOR                                   # base
+        RATE_CONSTANT   9.120e-08 mol/m^2-sec   # log25=-7.04
+        ACTIVATION_ENERGY 48952.8 J/mol
+        PREFACTOR_SPECIES OH-
+          ALPHA 0.79d0
+        /
+      /
+    /
+    Ripidolite-14A   # Marty15 Chlorite (Marty15Crh, BRGM)
+      PREFACTOR                                   # neutral
+        RATE_CONSTANT   6.457e-17 mol/m^2-sec   # log25=-16.19
+        ACTIVATION_ENERGY 15899.2 J/mol
+      /
+      PREFACTOR                                   # acid
+        RATE_CONSTANT   8.128e-09 mol/m^2-sec   # log25=-8.09
+        ACTIVATION_ENERGY 17154.4 J/mol
+        PREFACTOR_SPECIES H+
+          ALPHA 0.28d0
+        /
+      /
+      PREFACTOR                                   # base
+        RATE_CONSTANT   6.918e-09 mol/m^2-sec   # log25=-8.16
+        ACTIVATION_ENERGY 15899.2 J/mol
+        PREFACTOR_SPECIES OH-
+          ALPHA 0.34d0
+        /
+      /
+      AFFINITY_THRESHOLD 1.d10
+    /
+    Calcite   # Marty15 Calcite (Marty15Crh, BRGM)
+      PREFACTOR                                   # neutral
+        RATE_CONSTANT   1.585e-06 mol/m^2-sec   # log25=-5.80
+        ACTIVATION_ENERGY 23848.8 J/mol
+      /
+      PREFACTOR                                   # acid
+        RATE_CONSTANT   5.012e-01 mol/m^2-sec   # log25=-0.30
+        ACTIVATION_ENERGY 13807.2 J/mol
+        PREFACTOR_SPECIES H+
+          ALPHA 1.00d0
+        /
+      /
+    /
+    Pyrite   # Marty15 Pyrite (O2 only; Fe3 autocat omitted) (Marty15Crh, BRGM)
+      PREFACTOR                                   # by O2
+        RATE_CONSTANT   3.715e-09 mol/m^2-sec   # log25=-8.43
+        ACTIVATION_ENERGY 56898.6 J/mol
+        PREFACTOR_SPECIES H+
+          ALPHA -0.18d0
+        /
+        PREFACTOR_SPECIES O2(aq)
+          ALPHA 0.50d0
+        /
+      /
+    /
+    Uraninite
+      PREFACTOR
+        RATE_CONSTANT   1.d-1 mol/m^2-sec
+      /
+    /
+    Ferrihydrite
+      PREFACTOR
+        RATE_CONSTANT   5.0d-9 mol/m^2-sec
+      /
+    /
+  /
+  SORPTION
+    SURFACE_COMPLEXATION_RXN
+      EQUILIBRIUM
+      MINERAL Ferrihydrite
+      SITE >FeOH 1.d-1
+      COMPLEXES
+        >FeOHUO2++                 # logK -6.63 (hanford.dat llnl-99)
+        >FeOHUO3                   # logK 3.05
+      /
+    /
+  /
+  MICROBIAL_REACTION
+    REACTION Acetate- + 4.0 UO2++ + 7.0 H+ -> 4.0 U++++ + 2.0 HCO3- + 4.0 H2O
+    RATE_CONSTANT 3.d-7
+    MONOD
+      SPECIES_NAME Acetate-
+      HALF_SATURATION_CONSTANT 5.d-4
+    /
+    MONOD
+      SPECIES_NAME UO2++
+      HALF_SATURATION_CONSTANT 1.d-7
+    /
+    INHIBITION
+      SPECIES_NAME O2(aq)
+      TYPE MONOD
+      THRESHOLD_CONCENTRATION 1.d-6
+      INHIBIT_ABOVE_THRESHOLD
+    /
+  /
+  DECOUPLED_EQUILIBRIUM_REACTIONS
+    U++++
+    Acetate-
+  /
+  DATABASE hanford_neaUOH4.dat
+  LOG_FORMULATION
+  ACTIVITY_COEFFICIENTS TIMESTEP
+  OUTPUT
+    PRIMARY_SPECIES
+    SECONDARY_SPECIES
+    PH
+    PE
+    TOTAL
+    FREE_ION
+    TOTAL_SORBED
+    MINERALS
+    MINERAL_SATURATION_INDEX
+  /
+END
+
+#=========================== material properties ==============================
+MATERIAL_PROPERTY soil1
+  ID 1
+  POROSITY 0.25d0
+  TORTUOSITY 0.5d0
+  ROCK_DENSITY 2700.d0
+  CHARACTERISTIC_CURVES default
+  PERMEABILITY
+    DATASET Permeability
+  /
+  PERMEABILITY_POWER 3.d0
+  LONGITUDINAL_DISPERSIVITY 0.3d0
+END
+
+CHARACTERISTIC_CURVES default
+  SATURATION_FUNCTION VAN_GENUCHTEN
+    M 0.5d0
+    ALPHA 1.d-4
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+    MAX_CAPILLARY_PRESSURE 1.d8
+  /
+  PERMEABILITY_FUNCTION MUALEM_VG_LIQ
+    M 0.5d0
+    LIQUID_RESIDUAL_SATURATION 0.1d0
+  /
+END
+
+#=========================== output ===========================================
+OUTPUT
+  SNAPSHOT_FILE
+    PERIODIC TIME 1.d2 y
+  /
+  OBSERVATION_FILE
+    PERIODIC TIME 1.d1 y
+  /
+  MASS_BALANCE_FILE
+    PERIODIC TIME 1.d1 y
+  /
+  FORMAT VTK
+  ACKNOWLEDGE_VTK_FLAW
+  VARIABLES
+    LIQUID_PRESSURE
+    LIQUID_SATURATION
+    PERMEABILITY
+    POROSITY
+  /
+END
+
+#=========================== times ============================================
+TIME
+  FINAL_TIME 3.0d3 y
+  INITIAL_TIMESTEP_SIZE 1.d-2 y
+  MAXIMUM_TIMESTEP_SIZE 5.d1 y
+END
+
+#=========================== regions ==========================================
+REGION All
+  COORDINATES
+    -1.d20 -1.d20 -1.d20
+    1.d20 1.d20 1.d20
+  /
+END
+REGION inflow
+  FILE boundary_left_w.ex
+END
+REGION outflow
+  FILE boundary_right_e.ex
+END
+REGION pinned
+  FILE pinned.ex
+END
+REGION side_top
+  FILE boundary_top.ex
+END
+REGION side_bottom
+  FILE boundary_bottom.ex
+END
+REGION side_front
+  FILE boundary_front_n.ex
+END
+REGION side_back
+  FILE boundary_back_s.ex
+END
+REGION mon_mid
+  COORDINATES
+    -0.1d0 -1.d20 -1.d20
+    0.1d0  1.d20  1.d20
+  /
+END
+REGION mon_down
+  COORDINATES
+    1.9d0 -1.d20 -1.d20
+    2.1d0 1.d20  1.d20
+  /
+END
+
+OBSERVATION
+  REGION mon_mid
+END
+OBSERVATION
+  REGION mon_down
+END
+
+#=========================== flow conditions (rate-BC + pin) ==================
+FLOW_CONDITION pinned_p
+  TYPE
+    LIQUID_PRESSURE dirichlet
+  /
+  LIQUID_PRESSURE 2.0d5
+END
+FLOW_CONDITION injection
+  TYPE
+    RATE SCALED_VOLUMETRIC_RATE VOLUME
+  /
+  RATE 5.d-7 m^3/d
+END
+FLOW_CONDITION extraction
+  TYPE
+    RATE SCALED_VOLUMETRIC_RATE VOLUME
+  /
+  RATE -5.d-7 m^3/d
+END
+FLOW_CONDITION noflow              # side sealing.
+  TYPE
+    LIQUID_FLUX neumann
+  /
+  LIQUID_FLUX 0.d0 m/yr
+END
+
+#=========================== transport conditions =============================
+TRANSPORT_CONDITION background
+  TYPE dirichlet_zero_gradient
+  CONSTRAINT_LIST
+    0.d0 gw_initial
+  /
+END
+TRANSPORT_CONDITION inlet_tc
+  TYPE dirichlet_zero_gradient
+  CONSTRAINT_LIST
+    0.d0 gw_inlet
+  /
+END
+TRANSPORT_CONDITION sealed
+  TYPE zero_gradient
+  CONSTRAINT_LIST
+    0.d0 gw_initial
+  /
+END
+
+CONSTRAINT gw_initial
+  CONCENTRATIONS
+    H+        8.1       P
+    Na+       9.583d-4  Z
+    K+        8.696d-6  T
+    Ca++      3.730d-4  T
+    Mg++      5.143d-5  T
+    Cl-       4.456d-5  T
+    HCO3-     1.400d-3  T
+    SO4--     7.006d-5  T
+    F-        2.474d-4  T
+    Al+++     1.0d-8    M  K-Feldspar
+    Fe++      1.495d-7  T
+    UO2++     1.798d-8  T
+    O2(aq)    1.0d-12   T
+    SiO2(aq)  3.011d-4  T
+    U++++     1.0d-12   T           # decoupled U(IV) trace
+    Acetate-  1.0d-10   T
+  /
+  MINERALS
+    Quartz          0.29117   3.8580e+04   
+    K-Feldspar      0.2768    7.7947e+04   
+    Albite          0.1782    3.7351e+04   
+    Annite          9.10d-6   4.6410e+01
+    Ripidolite-14A  3.746d-6  2.9331e-02
+    Pyrite          1.517d-6  3.7925e-01
+    Calcite         0.003792  7.1934e+03
+    Uraninite       1.d-10    1.0d0
+    Ferrihydrite    0.0d0     1.0d0
+  /
+END
+CONSTRAINT gw_inlet
+  CONCENTRATIONS
+    H+        8.2       P
+    Na+       5.520d-4  Z
+    K+        6.650d-6  T
+    Ca++      4.062d-4  T
+    Mg++      1.152d-5  T
+    Cl-       6.290d-5  T
+    HCO3-     9.498d-4  T
+    SO4--     7.006d-5  T
+    F-        1.784d-4  T
+    Al+++     1.0d-8    M  K-Feldspar
+    Fe++      3.581d-8  T
+    UO2++     2.612d-6  T
+    O2(aq)    2.813d-5  T
+    SiO2(aq)  2.700d-4  T
+    U++++     1.0d-12   T           # decoupled U(IV) trace
+    Acetate-  1.0d-4    T
+  /
+END
+
+#=========================== boundary/coupler =================================
+SOURCE_SINK inflow
+  FLOW_CONDITION injection
+  TRANSPORT_CONDITION inlet_tc
+  REGION inflow
+END
+SOURCE_SINK outflow
+  FLOW_CONDITION extraction
+  TRANSPORT_CONDITION inlet_tc
+  REGION outflow
+END
+#@FRACTURE_BLOCKS@
+
+BOUNDARY_CONDITION PINNED
+  FLOW_CONDITION pinned_p
+  TRANSPORT_CONDITION sealed
+  REGION pinned
+END
+BOUNDARY_CONDITION SEAL_TOP
+  FLOW_CONDITION noflow
+  TRANSPORT_CONDITION sealed
+  REGION side_top
+END
+BOUNDARY_CONDITION SEAL_BOTTOM
+  FLOW_CONDITION noflow
+  TRANSPORT_CONDITION sealed
+  REGION side_bottom
+END
+BOUNDARY_CONDITION SEAL_FRONT
+  FLOW_CONDITION noflow
+  TRANSPORT_CONDITION sealed
+  REGION side_front
+END
+BOUNDARY_CONDITION SEAL_BACK
+  FLOW_CONDITION noflow
+  TRANSPORT_CONDITION sealed
+  REGION side_back
+END
+
+#=========================== initial / strata =================================
+INITIAL_CONDITION
+  FLOW_CONDITION pinned_p
+  TRANSPORT_CONDITION background
+  REGION All
+END
+#@FRACTURE_INITIAL_CONDITIONS@
+
+STRATA
+  REGION All
+  MATERIAL soil1
+END
+
+END_SUBSURFACE

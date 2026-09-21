@@ -1,0 +1,5 @@
+work/
+4_figures/output/
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,10 @@
+name: dfn-mineral-arrangement
+channels: [conda-forge]
+dependencies:
+  - python=3.11
+  - numpy
+  - pandas
+  - scipy
+  - matplotlib
+  # only for 4_figures/fig01_02_04_3d_views.py (needs the raw simulation output):
+  # - pyvista

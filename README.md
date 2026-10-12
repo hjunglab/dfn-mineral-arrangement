@@ -16,6 +16,10 @@ conda env create -f environment.yml && conda activate dfn-mineral-arrangement
 bash 4_figures/make_all.sh          # a few minutes; writes 4_figures/output/
 ```
 
+The figure scripts read `data/` and write `4_figures/output/` by default; set `DATA=<dir>` and `OUT=<dir>` to point them
+elsewhere (for example at a re-extracted data set). The extraction scripts in `3_extract/` read the raw output under `$WORK`
+(default `work/`) and write to `$DATA` (default `data/`).
+
 Each script prints the numbers quoted in the paper (for example the constants of Equation 10, the validation
 statistics, and the logistic midpoint of the calcite transition) next to the figure it draws.
 
@@ -72,6 +76,9 @@ reproduces the production decks line by line, and the extraction scripts reprodu
 
 ## Notes on the inputs
 
+* Uraninite is treated as a near-equilibrium phase: rate constant 1e-6 mol m-2 s-1 with a mass-based specific surface
+  area of 1e4 m2 kg-1 on a seed volume fraction of 1e-10 (annite initial volume fraction 9.218e-5). All results in `data/`
+  were produced with these settings.
 * `1_inputs/hanford_neaUOH4.dat` is the `hanford.dat` thermodynamic database distributed with PFLOTRAN with two
   entries changed: log K (25 °C) of U(OH)4(aq) from 4.57 to 10.0 (NEA value; Grenthe et al., 2021) and the molar
   volume of UO2(am) (not used in these simulations).

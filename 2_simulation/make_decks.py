@@ -33,7 +33,7 @@ MEAN_VF = {"Pyrite": 0.5e-5, "Calcite": 2.5e-3}                 # network-mean v
 # reactive surface area [m2 m-3 bulk] = BET [m2 g-1] x density [g cm-3] x 1e6 x volume fraction (Marty et al., 2015)
 BET_RHO = {"Quartz": (0.05, 2.65), "K-Feldspar": (0.11, 2.56), "Albite": (0.08, 2.62), "Annite": (1.7, 3.0),
            "Ripidolite-14A": (0.0027, 2.9), "Calcite": (0.7, 2.71), "Pyrite": (0.05, 5.0)}
-SILICATE_VF = {"Quartz": 0.29117, "K-Feldspar": 0.2768, "Albite": 0.1782, "Annite": 9.10e-6, "Ripidolite-14A": 3.746e-6}
+SILICATE_VF = {"Quartz": 0.29117, "K-Feldspar": 0.2768, "Albite": 0.1782, "Annite": 9.218e-5, "Ripidolite-14A": 3.746e-6}
 
 
 def area(mineral, vf):
@@ -106,7 +106,7 @@ WATER = """    H+        8.1       P
 def minerals(fr):
     return (SIL + "    Pyrite          %.4e  %.4e\n" % (pyr[fr], area("Pyrite", pyr[fr]))
             + "    Calcite         %.4e  %.4e\n" % (cal[fr], area("Calcite", cal[fr]))
-            + "    Uraninite       1.d-10    1.0d0\n    Ferrihydrite    0.0d0     1.0d0")
+            + "    Uraninite       1.d-10    1.d4 m^2/kg\n    Ferrihydrite    0.0d0     1.0d0")
 
 
 deck_dir = os.path.dirname(os.path.abspath(a.deck_out)); os.makedirs(deck_dir, exist_ok=True)

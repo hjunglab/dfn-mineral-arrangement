@@ -13,7 +13,7 @@ import numpy as np
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 WORK = os.environ.get("WORK", os.path.join(HERE, "..", "work"))
-DATA = os.path.join(HERE, "..", "data")
+DATA = os.environ.get("DATA", os.path.join(HERE, "..", "data"))   # override to write elsewhere (e.g. a re-run)
 NETWORKS = list(csv.DictReader(open(os.path.join(HERE, "..", "1_inputs", "networks.csv"))))
 DFN_OF = {int(r["seed"]): int(r["dfn"]) for r in NETWORKS}
 K_O2_DEFAULT, KB_DEFAULT = 1e-6, 3e-7

@@ -34,6 +34,12 @@ for g in groups:
     if len(g) > 1: x[g] = sig[g].mean() + 0.025 * (np.arange(len(g)) - (len(g) - 1) / 2)
 a.axvline(s50, color="0.35", ls="--", lw=1); a.axhline(0, color="k", lw=0.6)
 xx = np.linspace(0.05, 1.03, 300); a.plot(xx, logistic(xx, *L), color=BLUE, lw=1, alpha=0.55)
+from scipy import stats                                                       # linear regression of the pyrite effect on channeling
+reg = stats.linregress(sig, dU_pyr); fit = reg.intercept + reg.slope * xx
+se = np.sqrt(((dU_pyr - (reg.intercept + reg.slope * sig)) ** 2).sum() / (len(sig) - 2) * (1 / len(sig) + (xx - sig.mean()) ** 2 / ((sig - sig.mean()) ** 2).sum()))
+a.fill_between(xx, fit - stats.t.ppf(0.975, len(sig) - 2) * se, fit + stats.t.ppf(0.975, len(sig) - 2) * se, color=RED, alpha=0.10, lw=0)
+a.plot(xx, fit, color=RED, lw=1, alpha=0.7)
+print("pyrite effect vs channeling: slope %.0f +/- %.0f pp per unit sigma, R2 = %.2f, p = %.1e, Spearman rho = %.2f" % (reg.slope, reg.stderr, reg.rvalue ** 2, reg.pvalue, stats.spearmanr(sig, dU_pyr)[0]))
 a.scatter(x, dU_cal, c=BLUE, marker="D", s=44, edgecolor="k", lw=0.4, zorder=3, label="$\\Delta U_{cal}^{pyrA}$")
 a.scatter(x, dU_pyr, c=RED, marker="o", s=46, edgecolor="k", lw=0.4, zorder=4, label="$\\Delta U_{pyr}^{calA}$")
 a.scatter(x, pred_cal, facecolor="none", edgecolor=BLUE, marker="D", s=44, zorder=3, label="$\\Delta U_{cal}^{pyrA}$ (Eq. 10)")

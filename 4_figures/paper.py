@@ -6,7 +6,7 @@ import matplotlib; matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DATA = os.path.join(HERE, "..", "data"); OUT = os.path.join(HERE, "output"); os.makedirs(OUT, exist_ok=True)
+DATA = os.environ.get("DATA", os.path.join(HERE, "..", "data")); OUT = os.environ.get("OUT", os.path.join(HERE, "output")); os.makedirs(OUT, exist_ok=True)   # env overrides, e.g. DATA=../data_v2 OUT=output_v2
 plt.rcParams.update({"font.size": 11, "pdf.fonttype": 42})
 BLUE, GRAY, RED = "#2166ac", "#525252", "#b2182b"
 BEST, HOMOGENEOUS, WORST = (1, -2), (0, 0), (-1, 2)          # (beta_pyr, beta_cal) at |beta_cal| = 2

@@ -281,7 +281,7 @@ CHEMISTRY
     /
     Uraninite
       PREFACTOR
-        RATE_CONSTANT   1.d-1 mol/m^2-sec
+        RATE_CONSTANT   1.d-6 mol/m^2-sec    # near-equilibrium uraninite (mass-based SSA below); k*A ~1e-8 avoids a spurious first-step precipitation
       /
     /
     Ferrihydrite
@@ -511,11 +511,11 @@ CONSTRAINT gw_initial
     Quartz          0.29117   3.8580e+04   
     K-Feldspar      0.2768    7.7947e+04   
     Albite          0.1782    3.7351e+04   
-    Annite          9.10d-6   4.6410e+01
+    Annite          9.218d-5  4.6410e+01
     Ripidolite-14A  3.746d-6  2.9331e-02
     Pyrite          1.517d-6  3.7925e-01
     Calcite         0.003792  7.1934e+03
-    Uraninite       1.d-10    1.0d0
+    Uraninite       1.d-10    1.d4 m^2/kg
     Ferrihydrite    0.0d0     1.0d0
   /
 END

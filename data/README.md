@@ -1,6 +1,8 @@
 # Data dictionary
 
-All files were produced by the scripts in `3_extract/` from the raw PFLOTRAN output of the 457 simulations.
+All files were produced by the scripts in `3_extract/` from the raw PFLOTRAN output of the 457 simulations (300 factorial +
+20 random-field + 48 flow-rate + 89 sensitivity runs; one sensitivity configuration was numerically intractable and is absent).
+The simulations use the near-equilibrium uraninite treatment described in the top-level README.
 
 **Keys shared by the files**
 
